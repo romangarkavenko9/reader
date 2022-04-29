@@ -37,8 +37,35 @@ def READ(dict):
 
 
 def LS(dict):
+	files = os.listdir('data') # najdenie suborov v adresari data
+
+	headerReply = f'Lines:{len(files)}' #pocet suborov
+	contentReply = '\n'.join(files) #spojenie nazvov suborov do jedneho stringu 
+
+	return headerReply, contentReply, 100, 'OK'
 
 def LENGTH(dict):
+
+	try:
+		if (dict["File"].find('/') != -1):
+			return '','', 200, "Bad request"
+
+		with open(f'data/{dict["File"]}', 'r') as file:
+			fileContent = file.readlines()
+			lines = len(flieContent) #pocet riadkov v subore			
+			
+    except FileNotFoundError:
+        return '','',202,'No such file'
+    except OSError:
+        return '','',203,'Read error'
+    except KeyError:
+        return '','',200,'Bad request'
+
+    headerReply = f'Lines:1' # hlavicka odpovede
+    contentReply = lines #pocet riadkov v danom subore
+
+    return headerReply, contentReply, 100, 'OK'
+
 
 def SPLITHEADER(line):
 	line = line.strip() # odstranenie medzier (na konci/ na zaciatku)
@@ -57,9 +84,6 @@ def SPLITHEADER(line):
 	if(line[0].find(':') != -1): # nesmie obsahovat dvojbodku
 		return '', ''
 
-
-	if(line[0].find('/') != -1): # nesmie obsahovat lomitko
-		return '', ''
 
 	return line[0], line[1]
 
