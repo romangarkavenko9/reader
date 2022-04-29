@@ -29,7 +29,7 @@ def READ(dict):
     except KeyError:
         return '','',200,'Bad request'
 
-    headerReply = f'Lines:{dict["To"] - dict["From"]}' # hlavicka odpovede
+    headerReply = f'Lines:{dict["To"] - dict["From"]}\n' # hlavicka odpovede
     contentReply = [lines[i] for i in range(dict["From"], dict["To"])] # vybranie konkretnych riadkov zo suboru
     contentReply = ''.join(contentReply) # spojenie riadkov do jedneho stringu 
 
@@ -39,7 +39,7 @@ def READ(dict):
 def LS(dict):
 	files = os.listdir('data') # najdenie suborov v adresari data
 
-	headerReply = f'Lines:{len(files)}' #pocet suborov
+	headerReply = f'Lines:{len(files)}\n' #pocet suborov
 	contentReply = '\n'.join(files) #spojenie nazvov suborov do jedneho stringu 
 
 	return headerReply, contentReply, 100, 'OK'
@@ -61,7 +61,7 @@ def LENGTH(dict):
     except KeyError:
         return '','',200,'Bad request'
 
-    headerReply = f'Lines:1' # hlavicka odpovede
+    headerReply = f'Lines:1\n' # hlavicka odpovede
     contentReply = lines #pocet riadkov v danom subore
 
     return headerReply, contentReply, 100, 'OK'
