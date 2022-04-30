@@ -5,22 +5,18 @@ import sys
 import signal
 
 def READ(dict):
-	#kontrola hodnot from a to 
-	
+    #kontrola hodnot from a to 
 
-	try:
-		with open(f'data/{dict["File"]}', 'r') as file:
-			fileContent = file.readlines()
-			lines = len(flieContent) #pocet riadkov v subore
-			
-			if(not isinstance(dict["From"],int)) or (dict["From"] < 0 ):
-				return '','',200,'Bad request'
 
-			if(not isinstance(dict["To"],int)) or (dict["To"] < 0 ) or (dict["To"] < dict["From"]):  
-				return '','',200,'Bad request'
-			
-			if(dict["To"] > (lines - 1)):
-				return '','',201,'Bad line number'
+    try:
+            with open(f'data/{dict["File"]}', 'r') as file:
+                fileContent = file.readlines()
+                lines = len(fileContent)
+
+            if(int(dict["From"]) < 0 ) or (int(dict["To"]) < 0 ) or (int(dict["To"]) < int(dict["From"])):
+                return '','',200,'Bad request'
+            if(int(dict["To"]) > (lines - 1)):
+                return '','',201,'Bad line number'
 
     except FileNotFoundError:
         return '','',202,'No such file'
@@ -29,31 +25,32 @@ def READ(dict):
     except KeyError:
         return '','',200,'Bad request'
 
-    headerReply = f'Lines:{dict["To"] - dict["From"]}\n' # hlavicka odpovede
-    contentReply = [lines[i] for i in range(dict["From"], dict["To"])] # vybranie konkretnych riadkov zo suboru
-    contentReply = ''.join(contentReply) # spojenie riadkov do jedneho stringu 
+    headerReply = f'Lines:{int(dict["To"]) - int(dict["From"])}\n'
+    contentReply = [fileContent[i] for i in range(int(dict["From"]), int(dict["To"]))]
+    contentReply = ''.join(contentReply)
 
     return headerReply, contentReply, 100, 'OK'
 
 
 def LS(dict):
-	files = os.listdir('data') # najdenie suborov v adresari data
+    files = os.listdir('data')
 
-	headerReply = f'Lines:{len(files)}\n' #pocet suborov
-	contentReply = '\n'.join(files) #spojenie nazvov suborov do jedneho stringu 
+    headerReply = f'Lines:{len(files)}\n'
+    contentReply = '\n'.join(files) + '\n'
 
-	return headerReply, contentReply, 100, 'OK'
+    return headerReply, contentReply, 100, 'OK'
 
 def LENGTH(dict):
 
-	try:
-		if (dict["File"].find('/') != -1):
-			return '','', 200, "Bad request"
 
-		with open(f'data/{dict["File"]}', 'r') as file:
-			fileContent = file.readlines()
-			lines = len(flieContent) #pocet riadkov v subore			
-			
+    try:
+            if (dict["File"].find('/') != -1):
+                return '','', 200, "Bad request"
+
+            with open(f'data/{dict["File"]}', 'r') as file:
+                fileContent = file.readlines()
+                lines = len(fileContent)
+
     except FileNotFoundError:
         return '','',202,'No such file'
     except OSError:
@@ -61,40 +58,34 @@ def LENGTH(dict):
     except KeyError:
         return '','',200,'Bad request'
 
-    headerReply = f'Lines:1\n' # hlavicka odpovede
-    contentReply = lines #pocet riadkov v danom subore
+    headerReply = f'Lines:1\n'
+    contentReply = f'{lines}' + '\n'
 
     return headerReply, contentReply, 100, 'OK'
 
 
 def SPLITHEADER(line):
-	line = line.strip() # odstranenie medzier (na konci/ na zaciatku)
-	line=line.split(':') #rozdelenie na identifikator a hodnotu
-	if(len(line) != 2):
-		return '', '' 
-
-	#kontrola identifikatora
-	if not isascii(line[0]): #kontroler ascii znakov 
-		return '', ''
-
-	for char in line[0]:   
-		if(char.isspace()): #kontrola bielych znakov
-			return '', ''
-
-	if(line[0].find(':') != -1): # nesmie obsahovat dvojbodku
-		return '', ''
+    line = line.strip() # odstranenie medzier (na konci/ na zaciatku)
+    line=line.split(':') #rozdelenie na identifikator a hodnotu
+    if(len(line) != 2):
+        return '', ''
+    if not line[0].isascii(): #kontroler ascii znakov
+        return '', ''
+    for char in line[0]:
+        if(char.isspace()): #kontrola bielych znakov
+            return '', ''
+    if(line[0].find(':') != -1): # nesmie obsahovat dvojbodku
+        return '', ''
 
 
-	return line[0], line[1]
-
-######################################################################	
+    return line[0], line[1]
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.bind(('', 9999))
 signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 s.listen(5)
-qhp_Qg89vY6qQtrbMkt16Eh0H4PE5nuPyy098o6D
+
 while True:
     connectedSocket, address = s.accept()
     print(f'connection from adress: {address}')
@@ -104,17 +95,17 @@ while True:
         f = connectedSocket.makefile(mode='rw', encoding='utf-8')
 
         while True:
-
-            method = f.readline().strip() #precitanie metody
-            if not method: # ak sa neprecita ziadna metoda tak break
+            headers = {}
+            method = f.readline().strip()
+            if not method:
                 break
 
             data = f.readline()
 
             while data != "\n":
               identifier, value = SPLITHEADER(data) # rozdelenie hlavicky
-              headers[identifier]= value #ulozenie hlavicky 
-              data = f.readline() #precitanie dalsieho riadku 
+              headers[identifier] = value
+              data = f.readline()
 
             statusCode, statusMsg = (100, 'OK')
 
